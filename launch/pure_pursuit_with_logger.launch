@@ -1,0 +1,11 @@
+<launch>
+    <!-- YAML에서 파라미터 불러오기 -->
+    <rosparam file="$(find pure_pursuit)/config/pure_pursuit_params.yaml" command="load"/>
+
+    <!-- Pure Pursuit 제어 노드 -->
+    <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit_node" output="screen"/>
+
+    <!-- Path Recorder 노드 -->
+    <node pkg="pure_pursuit" type="path_recorder" name="path_recorder_node" output="screen"/>
+</launch>
+

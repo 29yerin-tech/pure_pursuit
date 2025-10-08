@@ -1,0 +1,10 @@
+# Pure Pursuit 파라미터
+ld_straight: 6.0   # 직선 구간 시야거리 (m)
+ld_curve: 3.0      # 곡선 구간 시야거리 (m)
+target_velocity: 10.0     # 목표 속도 (m/s)
+goal_tolerance: 1.0       # 마지막 웨이포인트 도착 판정 반경 (m)
+
+# 파일 경로
+path_file_name: "$(find pure_pursuit)/Path.txt"
+ref_file_name: "$(find pure_pursuit)/ref.txt"
+
