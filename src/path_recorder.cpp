@@ -4,7 +4,7 @@
 #include <cmath>
 #include <geodesy/utm.h>
 #include <geographic_msgs/GeoPoint.h>
-#include "pure_pursuit_function.hpp"
+#include "pure_pursuit/pure_pursuit_function.hpp"
 
 std::ofstream record_file;
 double last_x = 0.0, last_y = 0.0;
@@ -28,8 +28,7 @@ void egoCallback(const morai_msgs::EgoVehicleStatus::ConstPtr& msg) {
     utm_point.zone     = 52;
     utm_point.band     = 'S';
 
-    geographic_msgs::GeoPoint geo_point;
-    geodesy::toMsg(utm_point, geo_point);
+    geographic_msgs::GeoPoint geo_point = geodesy::toMsg(utm_point);
 
     // 3. WGS84 → ENU
     double enu_x, enu_y, enu_z;

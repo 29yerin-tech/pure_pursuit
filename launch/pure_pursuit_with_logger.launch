@@ -1,11 +1,13 @@
 <launch>
-    <!-- YAML에서 파라미터 불러오기 -->
-    <rosparam file="$(find pure_pursuit)/config/pure_pursuit_params.yaml" command="load"/>
+  <!-- yaml 불러오기 -->
+  <rosparam file="$(find pure_pursuit)/config/pure_pursuit_params.yaml" command="load"/>
 
-    <!-- Pure Pursuit 제어 노드 -->
-    <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit_node" output="screen"/>
+  <!-- ✅ 파일 경로는 launch에서 직접 지정 -->
+  <param name="path_file_name" value="$(find pure_pursuit)/config/Path.txt"/>
+  <param name="ref_file_name" value="$(find pure_pursuit)/config/ref.txt"/>
 
-    <!-- Path Recorder 노드 -->
-    <node pkg="pure_pursuit" type="path_recorder" name="path_recorder_node" output="screen"/>
+  <!-- 노드 실행 -->
+  <node pkg="pure_pursuit" type="path_recorder" name="path_recorder_node" output="screen"/>
+  <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit_node" output="screen"/>
 </launch>
 

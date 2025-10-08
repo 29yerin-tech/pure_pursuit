@@ -1,7 +1,8 @@
 #pragma once
+#include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <morai_msgs/LongitudinalCmd.h>
+#include <morai_msgs/GPSMessage.h>
+#include <morai_msgs/CtrlCmd.h>
 #include <vector>
 
 // ENU 기준점

@@ -1,4 +1,5 @@
-#include "pure_pursuit_function.hpp"
+#include "pure_pursuit/pure_pursuit_function.hpp"
+#include <morai_msgs/CtrlCmd.h>
 #include <cmath>
 #include <ros/ros.h>
 
@@ -58,11 +59,16 @@ double quaternionToYaw(double x, double y, double z, double w) {
 
 // ====================== Pure Pursuit ======================
 bool approachFirstWaypoint() {
-    if (waypoints.empty()) return false;
+    if (waypoints.empty()) {
+        ROS_WARN("No waypoints loaded!");
+        return false;
+    }
     double dx = waypoints[0].first - ego_x;
     double dy = waypoints[0].second - ego_y;
     double dist = sqrt(dx*dx + dy*dy);
-    if (dist < 1.0) {
+    ROS_INFO("Distance to first waypoint = %.2f", dist);
+
+    if (dist < 7.0) {
         reached_first_wp = true;
         ROS_INFO("Reached first waypoint.");
         return true;
@@ -75,8 +81,10 @@ bool checkGoalReached() {
     double dx = waypoints.back().first - ego_x;
     double dy = waypoints.back().second - ego_y;
     double dist = sqrt(dx*dx + dy*dy);
+    ROS_INFO("Distance to goal = %.2f", dist);
+
     if (dist < 1.0) {
-        morai_msgs::LongitudinalCmd stop_cmd;
+        morai_msgs::CtrlCmd stop_cmd;
         stop_cmd.longlCmdType = 2;
         stop_cmd.velocity = 0.0;
         stop_cmd.steering = 0.0;
@@ -91,35 +99,15 @@ bool checkGoalReached() {
 }
 
 std::pair<double, double> findLookAheadPoint(double ld) {
-
-    // for 반복문을 사용해 경로점(waypoints)을 확인할 겁니다.
-    // 가장 중요한 부분! -> int i = 0; 이 아니라, int i = last_search_idx; 부터 탐색을 시작합니다.
-    // 즉, 이전에 찾아냈던 목표점 위치(책갈피가 꽂힌 곳)부터 탐색을 이어 나갑니다.
     for (int i = last_search_idx; i < waypoints.size(); ++i) {
-        
-        // i번째 경로점의 x좌표와 내 차의 x좌표(ego_x) 사이의 거리를 계산합니다.
         double dx = waypoints[i].first - ego_x;
-        // i번째 경로점의 y좌표와 내 차의 y좌표(ego_y) 사이의 거리를 계산합니다.
         double dy = waypoints[i].second - ego_y;
-        
-        // 피타고라스 정리를 이용해 내 차와 i번째 경로점 사이의 실제 직선 거리를 계산합니다.
         double dist_from_ego = std::hypot(dx, dy);
-
-        // 만약 계산된 거리가, 외부에서 전달받은 목표 시야거리(ld)보다
-        // 마침내 더 멀어졌다면, (이게 우리가 찾던 바로 그 점입니다!)
         if (dist_from_ego > ld) {
-            
-            // "목표를 찾았다!" 다음 탐색을 위해, 지금 찾은 위치(i)를 '책갈피' 변수에 저장(갱신)합니다.
             last_search_idx = i;
-            
-            // 지금 찾은 i번째 경로점의 좌표를 반환하고, 함수를 즉시 종료합니다.
             return waypoints[i];
         }
-    } // 만약 if 조건이 맞지 않으면, 다음 경로점(i+1)으로 넘어가서 위 과정을 반복합니다.
-
-    // 위 반복문이 경로 끝까지 다 돌았는데도 목표점을 못 찾았다면,
-    // (보통 차량이 경로의 거의 끝에 도달했을 때 이런 상황이 발생합니다)
-    // 안전을 위해 경로의 가장 마지막 점을 목표점으로 반환합니다.
+    }
     return waypoints.back();
 }
 
@@ -132,18 +120,12 @@ double computeAlpha(const std::pair<double, double>& target) {
 
 double computeSteering(double alpha, double ld) {
     double wheelbase = 2.7;
-    // 고정된 6.0 대신, 외부에서 전달받은 ld 값을 사용합니다.
-    return atan2(2.0 * wheelbase * sin(alpha), ld); //atan2(x, y)=arctan(x/y)
+    return atan2(2.0 * wheelbase * sin(alpha), ld);
 }
 
-// ====================== Ld 조정 함수 ======================
 double adjustLookaheadDistance(double yaw_rate,
                                double ld_straight,
                                double ld_curve) {
-    double threshold = 0.1; // yaw_rate 기준
-    if (fabs(yaw_rate) < threshold) {
-        return ld_straight; // 직선
-    } else {
-        return ld_curve;    // 곡선
-    }
+    double threshold = 0.1;
+    return (fabs(yaw_rate) < threshold) ? ld_straight : ld_curve;
 }
